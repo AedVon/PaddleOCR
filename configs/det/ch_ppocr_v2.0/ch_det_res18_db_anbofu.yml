@@ -13,7 +13,7 @@ Global:
   #    you should set load_static_weights as False.
   load_static_weights: True
   cal_metric_during_train: False
-  pretrained_model: ./output/anbofu_pretrain_1118/ch_ppocr_server_v2.0_det_train
+  pretrained_model: ./pretrained/ch_ppocr_server_v2.0_det_train
   checkpoints:
   save_inference_dir:
   use_visualdl: False
@@ -90,9 +90,11 @@ Train:
                   'p': 0.2,
                   'then_list': [{ 'type': GaussianBlur, 'args': { 'sigma': [0.1, 2.0] } }] } }
       - EastRandomCropData:
-          size: [960, 960]
+          size: [1152, 800]
           max_tries: 50
+          min_crop_side_ratio: [0.1, 0.5]
           keep_ratio: true
+          min_text_size: 5
       - MakeBorderMap:
           shrink_ratio: 0.4
           thresh_min: 0.3
@@ -112,7 +114,7 @@ Train:
     shuffle: True
     drop_last: False
     batch_size_per_card: 8
-    num_workers: 0
+    num_workers: 4
 
 Eval:
   dataset:
