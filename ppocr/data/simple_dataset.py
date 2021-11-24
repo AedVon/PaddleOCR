@@ -57,7 +57,9 @@ class SimpleDataSet(Dataset):
         for idx, file in enumerate(file_list):
             with open(file, "rb") as f:
                 lines = f.readlines()
-                if self.mode == "train" or ratio_list[idx] < 1.0:
+                if ratio_list[idx] > 1.0:
+                    lines = lines * int(ratio_list[idx])
+                elif self.mode == "train" or ratio_list[idx] < 1.0:
                     random.seed(self.seed)
                     lines = random.sample(lines,
                                           round(len(lines) * ratio_list[idx]))
