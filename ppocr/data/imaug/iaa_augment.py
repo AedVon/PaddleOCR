@@ -37,6 +37,9 @@ class AugmenterBuilder(object):
                     *[self.to_tuple_if_list(a) for a in args[1:]])
         elif isinstance(args, dict):
             cls = getattr(iaa, args['type'])
+            if args['type'] == 'Sometimes':
+                args['args']['then_list'] = [self.build(value, root=False) for value in args['args']['then_list']]
+
             return cls(**{
                 k: self.to_tuple_if_list(v)
                 for k, v in args['args'].items()
