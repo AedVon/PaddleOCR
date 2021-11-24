@@ -64,6 +64,11 @@ def crop_area(im, text_polys, min_crop_side_ratio, max_tries):
     h, w, _ = im.shape
     h_array = np.zeros(h, dtype=np.int32)
     w_array = np.zeros(w, dtype=np.int32)
+    min_crop_side_ratio_w = min_crop_side_ratio[0] \
+        if isinstance(min_crop_side_ratio, (list, tuple)) else min_crop_side_ratio
+    min_crop_side_ratio_h = min_crop_side_ratio[1] \
+        if isinstance(min_crop_side_ratio, (list, tuple)) else min_crop_side_ratio
+
     for points in text_polys:
         points = np.round(points, decimals=0).astype(np.int32)
         minx = np.min(points[:, 0])
@@ -92,7 +97,7 @@ def crop_area(im, text_polys, min_crop_side_ratio, max_tries):
         else:
             ymin, ymax = random_select(h_axis, h)
 
-        if xmax - xmin < min_crop_side_ratio * w or ymax - ymin < min_crop_side_ratio * h:
+        if xmax - xmin < min_crop_side_ratio_w * w or ymax - ymin < min_crop_side_ratio_h * h:
             # area too small
             continue
         num_poly_in_rect = 0
@@ -119,6 +124,7 @@ class EastRandomCropData(object):
         self.max_tries = max_tries
         self.min_crop_side_ratio = min_crop_side_ratio
         self.keep_ratio = keep_ratio
+        self.min_text_size = kwargs.get('min_text_size', 0)
 
     def __call__(self, data):
         img = data['image']
@@ -152,7 +158,13 @@ class EastRandomCropData(object):
         ignore_tags_crop = []
         texts_crop = []
         for poly, text, tag in zip(text_polys, texts, ignore_tags):
-            poly = ((poly - (crop_x, crop_y)) * scale).tolist()
+            poly = ((poly - (crop_x, crop_y)) * scale)
+
+            poly_w = np.max(poly[:, 0]) - np.min(poly[:, 0])
+            poly_h = np.max(poly[:, 1]) - np.min(poly[:, 1])
+            assert min(poly_w, poly_h) >= self.min_text_size, "Too small text"
+
+            poly = poly.tolist()
             if not is_poly_outside_rect(poly, 0, 0, w, h):
                 text_polys_crop.append(poly)
                 ignore_tags_crop.append(tag)
